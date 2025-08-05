@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gabby's Master's Timetable</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="container-to-capture">
+        <header>
+            <h1><i class="fas fa-calendar-alt"></i> Gabby's Master's Timetable</h1>
+            <div class="header-buttons">
+                <button id="add-class-btn"><i class="fas fa-plus"></i> Add Class</button>
+                <button id="download-btn"><i class="fas fa-download"></i> Download</button>
+            </div>
+        </header>
+
+        <main>
+            <div class="week-navigation">
+                <h2 class="motivation">You Got This babe <3< /h2>
+            </div>
+
+            <div class="timetable">
+                <!-- Days will be added via JavaScript -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Class Input Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2><i class="fas fa-book"></i> <span id="modal-title">Add New Class</span></h2>
+            <form id="class-form">
+                <input type="hidden" id="edit-index">
+                <input type="hidden" id="edit-day">
+                <div class="form-group">
+                    <label for="class-name">Subject:</label>
+                    <select id="class-name" required>
+                        <option value="">Select Subject</option>
+                        <option value="Literary Comparison: Theories and Practices (Sem 1)">Literary Comparison:
+                            Theories and Practices (Sem 1)</option>
+                        <option value="Comparative Ghalib (Sem 1)">Comparative Ghalib (Sem 1)</option>
+                        <option value="What is World Literature? Debates and Issues (Sem 1)">What is World Literature?
+                            Debates and Issues (Sem 1)</option>
+                        <option value="Theory of Genres: Life Writing (Sem 1)">Theory of Genres: Life Writing (Sem 1)
+                        </option>
+                        <option value="Hermeneutics: Key Theorists (Sem 1)">Hermeneutics: Key Theorists (Sem 1)</option>
+                        <option value="Reading Myth and Fantasy (Sem 1)">Reading Myth and Fantasy (Sem 1)</option>
+                        <option value="other">Other...</option>
+                    </select>
+                    <input type="text" id="other-subject" class="custom-input" placeholder="Enter custom subject">
+                </div>
+                <div class="form-group">
+                    <label for="class-room">Room:</label>
+                    <select id="class-room">
+                        <option value="">Select Room</option>
+                        <option value="Prof. Shad">Prof. Shad</option>
+                        <option value="Prof. Sandeep">Prof. Sandeep</option>
+                        <option value="Prof. Shelmi">Prof. Shelmi</option>
+                        <option value="other-room">Other...</option>
+                    </select>
+                    <input type="text" id="other-room" class="custom-input" placeholder="Enter custom room">
+                </div>
+                <div class="form-group">
+                    <label for="class-day">Day:</label>
+                    <select id="class-day" required>
+                        <option value="">Select Day</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                    </select>
+                </div>
+                <div class="form-group time-group">
+                    <div>
+                        <label for="start-time">Start:</label>
+                        <input type="time" id="start-time" required>
+                    </div>
+                    <div>
+                        <label for="end-time">End:</label>
+                        <input type="time" id="end-time" required>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn"><i class="fas fa-save"></i> <span id="submit-btn-text">Save
+                        Class</span></button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase and HTML2Canvas -->
+    <script type="module" src="script.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script type="module">
+        // Initialize Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCBB-x8BIOQSH1h8IOq3bpTsKDIDAYRO-0",
+            authDomain: "gabby-timetable.firebaseapp.com",
+            databaseURL: "https://gabby-timetable-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "gabby-timetable",
+            storageBucket: "gabby-timetable.firebasestorage.app",
+            messagingSenderId: "1066980870407",
+            appId: "1:1066980870407:web:1c8e462d827c6c8177dda2",
+            measurementId: "G-JLT8X33N9P"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        window.timetableRef = doc(db, 'timetables', 'gabbyTimetable');
+        window.firebaseMethods = { setDoc, getDoc, onSnapshot };
+    </script>
+</body>
+
+</html>
