@@ -1,27 +1,4 @@
 /* General Styles */
-.timetable {
-    transition: opacity 0.3s ease;
-}
-
-.loading-spinner {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1000;
-    display: none;
-}
-
-.loading-spinner.active {
-    display: block;
-}
-
-.loading-spinner i {
-    font-size: 3rem;
-    color: #ff6b8b;
-    animation: spin 1s linear infinite;
-}
-
 body {
     font-family: 'Segoe UI', 'Arial', sans-serif;
     margin: 0;
@@ -122,6 +99,7 @@ button {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1.5rem;
     padding: 0 1.5rem 1.5rem;
+    transition: opacity 0.3s ease;
 }
 
 .day-column {
@@ -342,7 +320,7 @@ input:focus, select:focus {
     box-shadow: 0 4px 8px rgba(255,107,139,0.3);
 }
 
-/* Loading State */
+/* Loading States */
 #download-btn.loading {
     position: relative;
     padding-right: 2.5rem;
@@ -360,6 +338,25 @@ input:focus, select:focus {
     border-top-color: white;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
+}
+
+.loading-spinner {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    display: none;
+}
+
+.loading-spinner.active {
+    display: block;
+}
+
+.loading-spinner i {
+    font-size: 3rem;
+    color: #ff6b8b;
+    animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
@@ -382,5 +379,4 @@ input:focus, select:focus {
         flex-direction: column;
         gap: 0;
     }
-
 }
