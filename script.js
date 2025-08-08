@@ -16,10 +16,24 @@ const modalTitle = document.getElementById('modal-title');
 const submitBtnText = document.getElementById('submit-btn-text');
 const editIndexInput = document.getElementById('edit-index');
 const editDayInput = document.getElementById('edit-day');
+const loadingSpinner = document.querySelector('.loading-spinner');
 
 // Initialize custom inputs as hidden
 otherSubjectInput.style.display = 'none';
 otherRoomInput.style.display = 'none';
+
+// Set loading state
+function setLoadingState(isLoading) {
+    if (isLoading) {
+        loadingSpinner.classList.add('active');
+        timetableEl.style.opacity = '0.7';
+        timetableEl.style.pointerEvents = 'none';
+    } else {
+        loadingSpinner.classList.remove('active');
+        timetableEl.style.opacity = '1';
+        timetableEl.style.pointerEvents = 'auto';
+    }
+}
 
 // Subject dropdown handler
 subjectSelect.addEventListener('change', function() {
@@ -45,6 +59,7 @@ roomSelect.addEventListener('change', function() {
 
 // Load timetable from Firestore
 async function loadTimetable() {
+    setLoadingState(true);
     try {
         const docSnap = await window.firebaseMethods.getDoc(window.timetableRef);
         if (docSnap.exists()) {
@@ -58,22 +73,29 @@ async function loadTimetable() {
         }
     } catch (error) {
         console.error("Error loading timetable:", error);
+    } finally {
+        setLoadingState(false);
     }
 }
 
 // Save timetable to Firestore
 async function saveTimetable() {
+    setLoadingState(true);
     try {
         await window.firebaseMethods.setDoc(window.timetableRef, { data: timetable });
         console.log("Timetable saved");
     } catch (error) {
         console.error("Error saving timetable:", error);
+        throw error;
+    } finally {
+        setLoadingState(false);
     }
 }
 
 // Set up real-time listener
 function setupRealtimeListener() {
     window.firebaseMethods.onSnapshot(window.timetableRef, (doc) => {
+        setLoadingState(true);
         if (doc.exists()) {
             const newData = doc.data().data || {};
             // Only update if there are actual changes
@@ -82,6 +104,7 @@ function setupRealtimeListener() {
                 renderTimetable();
             }
         }
+        setTimeout(() => setLoadingState(false), 300); // Small delay for smooth transition
     });
 }
 
@@ -104,7 +127,7 @@ function renderTimetable() {
                     classItem.innerHTML = `
                         <strong>${cls.name}</strong>
                         <span class="time">${formatTime(cls.startTime)} - ${formatTime(cls.endTime)}</span>
-                        ${cls.room ? `<span class="room"> ${cls.room}</span>` : ''}
+                        ${cls.room ? `<span class="room">Professor: ${cls.room}</span>` : ''}
                         <div class="class-actions">
                             <button class="edit" data-day="${day}" data-index="${index}">
                                 <i class="fas fa-edit"></i>
@@ -133,12 +156,19 @@ function renderTimetable() {
             const day = this.getAttribute('data-day');
             const index = parseInt(this.getAttribute('data-index'));
             
-            timetable[day].splice(index, 1);
-            if (timetable[day].length === 0) {
-                delete timetable[day];
+            setLoadingState(true);
+            try {
+                timetable[day].splice(index, 1);
+                if (timetable[day].length === 0) {
+                    delete timetable[day];
+                }
+                
+                await saveTimetable();
+            } catch (error) {
+                console.error("Error deleting class:", error);
+            } finally {
+                setLoadingState(false);
             }
-            
-            await saveTimetable();
         });
     });
     
@@ -222,76 +252,84 @@ window.addEventListener('click', (e) => {
 classForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    let subjectName;
-    if (subjectSelect.value === 'other') {
-        subjectName = otherSubjectInput.value.trim();
-        if (!subjectName) {
-            alert('Please enter a subject name');
+    setLoadingState(true);
+    
+    try {
+        let subjectName;
+        if (subjectSelect.value === 'other') {
+            subjectName = otherSubjectInput.value.trim();
+            if (!subjectName) {
+                alert('Please enter a subject name');
+                return;
+            }
+        } else {
+            subjectName = subjectSelect.value;
+        }
+
+        let roomName;
+        if (roomSelect.value === 'other-room') {
+            roomName = otherRoomInput.value.trim();
+        } else {
+            roomName = roomSelect.value;
+        }
+        
+        const day = document.getElementById('class-day').value;
+        const newClass = {
+            name: subjectName,
+            room: roomName,
+            day: day,
+            startTime: document.getElementById('start-time').value,
+            endTime: document.getElementById('end-time').value
+        };
+        
+        if (newClass.startTime >= newClass.endTime) {
+            alert('End time must be after start time');
             return;
         }
-    } else {
-        subjectName = subjectSelect.value;
-    }
-
-    let roomName;
-    if (roomSelect.value === 'other-room') {
-        roomName = otherRoomInput.value.trim();
-    } else {
-        roomName = roomSelect.value;
-    }
-    
-    const day = document.getElementById('class-day').value;
-    const newClass = {
-        name: subjectName,
-        room: roomName,
-        day: day,
-        startTime: document.getElementById('start-time').value,
-        endTime: document.getElementById('end-time').value
-    };
-    
-    if (newClass.startTime >= newClass.endTime) {
-        alert('End time must be after start time');
-        return;
-    }
-    
-    // Check if we're editing an existing class
-    const editIndex = editIndexInput.value;
-    const editDay = editDayInput.value;
-    
-    if (editIndex !== '' && editDay !== '') {
-        // Remove the old class if the day has changed
-        if (editDay !== day) {
-            timetable[editDay].splice(editIndex, 1);
-            if (timetable[editDay].length === 0) {
-                delete timetable[editDay];
+        
+        // Check if we're editing an existing class
+        const editIndex = editIndexInput.value;
+        const editDay = editDayInput.value;
+        
+        if (editIndex !== '' && editDay !== '') {
+            // Remove the old class if the day has changed
+            if (editDay !== day) {
+                timetable[editDay].splice(editIndex, 1);
+                if (timetable[editDay].length === 0) {
+                    delete timetable[editDay];
+                }
+                // Add to new day
+                if (!timetable[day]) {
+                    timetable[day] = [];
+                }
+                timetable[day].push(newClass);
+            } else {
+                // Update existing class
+                timetable[day][editIndex] = newClass;
             }
-            // Add to new day
+        } else {
+            // Add new class
             if (!timetable[day]) {
                 timetable[day] = [];
             }
             timetable[day].push(newClass);
-        } else {
-            // Update existing class
-            timetable[day][editIndex] = newClass;
         }
-    } else {
-        // Add new class
-        if (!timetable[day]) {
-            timetable[day] = [];
-        }
-        timetable[day].push(newClass);
+        
+        // Save to Firestore
+        await saveTimetable();
+        
+        // Reset form and close modal
+        classForm.reset();
+        otherSubjectInput.style.display = 'none';
+        otherSubjectInput.required = false;
+        otherRoomInput.style.display = 'none';
+        otherRoomInput.required = false;
+        modal.style.display = 'none';
+    } catch (error) {
+        console.error("Error saving class:", error);
+    } finally {
+        setLoadingState(false);
     }
-    
-    // Save to Firestore
-    await saveTimetable();
-    
-    // Reset form and close modal
-    classForm.reset();
-    otherSubjectInput.style.display = 'none';
-    otherSubjectInput.required = false;
-    otherRoomInput.style.display = 'none';
-    otherRoomInput.required = false;
-    modal.style.display = 'none';
 });
 
 // Download as Image
@@ -307,6 +345,9 @@ downloadBtn.addEventListener('click', function() {
     const downloadBtnDisplay = downloadBtn.style.display;
     addBtn.style.display = 'none';
     downloadBtn.style.display = 'none';
+    
+    // Hide loading spinner during screenshot
+    loadingSpinner.style.display = 'none';
     
     // Capture the container with header and timetable
     html2canvas(document.querySelector('.container-to-capture'), {
@@ -325,12 +366,14 @@ downloadBtn.addEventListener('click', function() {
         // Restore button states
         addBtn.style.display = addBtnDisplay;
         downloadBtn.style.display = downloadBtnDisplay;
+        loadingSpinner.style.display = 'block';
         this.innerHTML = originalText;
         this.classList.remove('loading');
     }).catch(err => {
         console.error('Error generating image:', err);
         addBtn.style.display = addBtnDisplay;
         downloadBtn.style.display = downloadBtnDisplay;
+        loadingSpinner.style.display = 'block';
         this.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error';
         setTimeout(() => {
             this.innerHTML = originalText;
@@ -343,5 +386,4 @@ downloadBtn.addEventListener('click', function() {
 document.addEventListener('DOMContentLoaded', () => {
     loadTimetable();
     setupRealtimeListener();
-
 });
