@@ -1,4 +1,27 @@
 /* General Styles */
+.timetable {
+    transition: opacity 0.3s ease;
+}
+
+.loading-spinner {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    display: none;
+}
+
+.loading-spinner.active {
+    display: block;
+}
+
+.loading-spinner i {
+    font-size: 3rem;
+    color: #ff6b8b;
+    animation: spin 1s linear infinite;
+}
+
 body {
     font-family: 'Segoe UI', 'Arial', sans-serif;
     margin: 0;
@@ -359,4 +382,5 @@ input:focus, select:focus {
         flex-direction: column;
         gap: 0;
     }
+
 }
