@@ -104,7 +104,7 @@ function renderTimetable() {
                     classItem.innerHTML = `
                         <strong>${cls.name}</strong>
                         <span class="time">${formatTime(cls.startTime)} - ${formatTime(cls.endTime)}</span>
-                        ${cls.room ? `<span class="room">Room: ${cls.room}</span>` : ''}
+                        ${cls.room ? `<span class="room"> ${cls.room}</span>` : ''}
                         <div class="class-actions">
                             <button class="edit" data-day="${day}" data-index="${index}">
                                 <i class="fas fa-edit"></i>
@@ -343,4 +343,5 @@ downloadBtn.addEventListener('click', function() {
 document.addEventListener('DOMContentLoaded', () => {
     loadTimetable();
     setupRealtimeListener();
+
 });
